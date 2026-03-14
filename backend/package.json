@@ -1,0 +1,24 @@
+{
+  "name": "codeprep",
+  "version": "1.0.0",
+  "description": "a website which will track your daily problem solving activites and will give you a proper analysis",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Kumar-Deepak-DEV/codeprep.git"
+  },
+  "author": "Deepak Kumar",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Kumar-Deepak-DEV/codeprep/issues"
+  },
+  "homepage": "https://github.com/Kumar-Deepak-DEV/codeprep#readme",
+  "dependencies": {
+    "express": "^5.2.1",
+    "mongoose": "^9.3.0",
+    "nodemon": "^3.1.14"
+  }
+}
