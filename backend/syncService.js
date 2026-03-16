@@ -1,29 +1,77 @@
-const fetchLeetCodeSolved = require("./platforms/leetcodeService");
-const fetchCodeforcesSolved = require("./platforms/codeforcesService");
+const Problem = require("./models/Problem");
 
-async function fetchAllPlatforms(user) {
+const { fetchLeetCodeSolved } = require("./services/leetcodeService");
+const { fetchCodeforcesSolved } = require("./services/codeforcesService");
 
-  let problems = [];
+async function syncAllPlatforms(user) {
 
-  if (user.platforms.leetcode) {
-
-    const lcProblems = await fetchLeetCodeSolved(
-      user.platforms.leetcode
-    );
-
-    problems.push(...lcProblems);
+  if (!user || !user._id) {
+    console.log("syncAllPlatforms called without valid user");
+    return;
   }
 
-  if (user.platforms.codeforces) {
+  console.log("Running sync for user:", user.platforms);
 
-    const cfProblems = await fetchCodeforcesSolved(
-      user.platforms.codeforces
-    );
+  try {
 
-    problems.push(...cfProblems);
+    if (user.platforms?.leetcode) {
+
+      const problems = await fetchLeetCodeSolved(user.platforms.leetcode);
+
+      console.log("LeetCode fetched:", problems.length);
+
+      for (const p of problems) {
+
+        await Problem.updateOne(
+          {
+            userId: user._id,
+            title: p.title,
+            platform: "leetcode"
+          },
+          {
+            $set: {
+              ...p,
+              userId: user._id
+            }
+          },
+          { upsert: true }
+        );
+
+      }
+
+    }
+
+    if (user.platforms?.codeforces) {
+
+      const problems = await fetchCodeforcesSolved(user.platforms.codeforces);
+
+      console.log("Codeforces fetched:", problems.length);
+
+      for (const p of problems) {
+
+        await Problem.updateOne(
+          {
+            userId: user._id,
+            title: p.title,
+            platform: "codeforces"
+          },
+          {
+            $set: {
+              ...p,
+              userId: user._id
+            }
+          },
+          { upsert: true }
+        );
+
+      }
+
+    }
+
+  } catch (err) {
+    console.error("Sync error:", err);
   }
 
-  return problems;
 }
 
-module.exports = fetchAllPlatforms;
+module.exports = { syncAllPlatforms };
