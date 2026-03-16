@@ -1,9 +1,29 @@
 const Problem = require("../models/Problem");
+const User = require("../models/User");
+const { fetchLeetCodeStats } = require("../services/leetcodeService");
+const { fetchCodeforcesStats } = require("../services/codeforcesService");
 
 exports.getAnalytics = async (req, res) => {
   try {
     const userId = req.user._id;
+    const user = await User.findById(userId);
     const problems = await Problem.find({ userId });
+
+    let leetcodeStats = null;
+    let codeforcesStats = null;
+    let hasLeetcode = false;
+    let hasCodeforces = false;
+
+    if (user && user.platforms) {
+      if (user.platforms.leetcode) {
+        hasLeetcode = true;
+        leetcodeStats = await fetchLeetCodeStats(user.platforms.leetcode);
+      }
+      if (user.platforms.codeforces) {
+        hasCodeforces = true;
+        codeforcesStats = await fetchCodeforcesStats(user.platforms.codeforces);
+      }
+    }
 
     const daysMap = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     const weekly = [];
@@ -21,9 +41,8 @@ exports.getAnalytics = async (req, res) => {
         });
     }
 
-    let easyCount = 0;
-    let medCount = 0;
-    let hardCount = 0;
+    let leetcodeEasy = 0, leetcodeMed = 0, leetcodeHard = 0;
+    let cfEasy = 0, cfMed = 0, cfHard = 0;
     
     let platformCounts = {};
     let topicCounts = {};
@@ -38,10 +57,23 @@ exports.getAnalytics = async (req, res) => {
 
         // compute difficulty
         if (p.difficulty) {
-            const d = p.difficulty.toLowerCase();
-            if (d === 'easy' || (!isNaN(d) && parseInt(d) <= 1200)) easyCount++;
-            else if (d === 'medium' || (!isNaN(d) && parseInt(d) > 1200 && parseInt(d) <= 1800)) medCount++;
-            else hardCount++;
+            const d = p.difficulty.toString().toLowerCase();
+            const isCodeforces = p.platform === "codeforces";
+            
+            if (isCodeforces) {
+                if (!isNaN(d)) {
+                    const rating = parseInt(d);
+                    if (rating <= 1200) cfEasy++;
+                    else if (rating <= 1800) cfMed++;
+                    else cfHard++;
+                } else {
+                    cfEasy++; // Unrated or string
+                }
+            } else {
+                if (d === 'easy') leetcodeEasy++;
+                else if (d === 'medium') leetcodeMed++;
+                else if (d === 'hard') leetcodeHard++;
+            }
         }
 
         // compute platform
@@ -55,10 +87,30 @@ exports.getAnalytics = async (req, res) => {
         }
     });
 
-    const difficulty = [
-        { name: "Easy", value: easyCount },
-        { name: "Medium", value: medCount },
-        { name: "Hard", value: hardCount }
+    if (leetcodeStats && leetcodeStats.totalSolved > 0) {
+      leetcodeEasy += leetcodeStats.easySolved;
+      leetcodeMed += leetcodeStats.mediumSolved;
+      leetcodeHard += leetcodeStats.hardSolved;
+      platformCounts["leetcode"] = leetcodeStats.totalSolved;
+    }
+
+    if (codeforcesStats && codeforcesStats.totalSolved > 0) {
+      cfEasy += codeforcesStats.easySolved;
+      cfMed += codeforcesStats.mediumSolved;
+      cfHard += codeforcesStats.hardSolved;
+      platformCounts["codeforces"] = codeforcesStats.totalSolved;
+    }
+
+    const leetcodeDifficulty = [
+        { name: "Easy", value: leetcodeEasy },
+        { name: "Medium", value: leetcodeMed },
+        { name: "Hard", value: leetcodeHard }
+    ];
+
+    const codeforcesDifficulty = [
+        { name: "Easy (≤1200)", value: cfEasy },
+        { name: "Medium (1301-1800)", value: cfMed },
+        { name: "Hard (>1800)", value: cfHard }
     ];
 
     const platform = Object.keys(platformCounts).map(k => ({ platform: k, solved: platformCounts[k] }));
@@ -66,9 +118,14 @@ exports.getAnalytics = async (req, res) => {
 
     res.json({
         weekly,
-        difficulty,
+        leetcodeDifficulty,
+        codeforcesDifficulty,
         platform,
-        topics
+        topics,
+        leetcodeStats,
+        codeforcesStats,
+        hasLeetcode,
+        hasCodeforces
     });
 
   } catch (err) {
