@@ -1,7 +1,6 @@
 const axios = require("axios");
 
 async function validateLeetCode(username) {
-
   const query = `
   query getUserProfile($username: String!) {
     matchedUser(username: $username) {
@@ -11,7 +10,6 @@ async function validateLeetCode(username) {
   `;
 
   try {
-
     const res = await axios.post(
       "https://leetcode.com/graphql",
       {
@@ -20,28 +18,22 @@ async function validateLeetCode(username) {
       }
     );
 
-    return res.data.data.matchedUser !== null;
-
+    return res.data?.data?.matchedUser !== null;
   } catch {
     return false;
   }
-
 }
 
 async function validateCodeforces(handle) {
-
   try {
-
     const res = await axios.get(
       `https://codeforces.com/api/user.info?handles=${handle}`
     );
 
-    return res.data.status === "OK";
-
+    return res.data?.status === "OK";
   } catch {
     return false;
   }
-
 }
 
 module.exports = {
