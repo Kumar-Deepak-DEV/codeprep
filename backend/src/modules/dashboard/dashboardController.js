@@ -1,14 +1,16 @@
-const Problem = require("../models/Problem");
-const User = require("../models/User");
-const { fetchLeetCodeStats } = require("../services/leetcodeService");
-const { fetchCodeforcesStats } = require("../services/codeforcesService");
+const Problem = require("../problems/Problem");
+const User = require("../user/User");
+const { fetchLeetCodeStats } = require("../../services/leetcodeService");
+const { fetchCodeforcesStats } = require("../../services/codeforcesService");
 
 exports.getDashboardData = async (req, res) => {
-
   try {
-
     const userId = req.user._id;
     const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
     let leetcodeStats = null;
     let codeforcesStats = null;
@@ -48,7 +50,7 @@ exports.getDashboardData = async (req, res) => {
 
     // today's solved
     const startOfDay = new Date();
-    startOfDay.setHours(0,0,0,0);
+    startOfDay.setHours(0, 0, 0, 0);
 
     const todaySolved = await Problem.countDocuments({
       userId,
@@ -59,9 +61,9 @@ exports.getDashboardData = async (req, res) => {
     const recentProblems = await Problem.find({
       userId
     })
-    .sort({ solvedDate: -1 })
-    .limit(5)
-    .select("title platform difficulty solvedDate");
+      .sort({ solvedDate: -1 })
+      .limit(5)
+      .select("title platform difficulty solvedDate");
 
     res.json({
       totalSolved,
@@ -72,13 +74,9 @@ exports.getDashboardData = async (req, res) => {
       leetcodeStats,
       codeforcesStats
     });
-
   } catch (err) {
-
     res.status(500).json({
       error: err.message
     });
-
   }
-
 };
