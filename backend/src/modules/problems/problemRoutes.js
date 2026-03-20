@@ -1,12 +1,12 @@
 const express = require("express");
 const router = express.Router();
-const protect = require("../middleware/authMiddleware");
+const protect = require("../../middleware/authMiddleware");
 
 const {
   getProblems,
   addProblem,
   deleteProblem
-} = require("../controllers/problemController");
+} = require("./problemController");
 
 router.get("/", protect, getProblems);
 router.post("/", protect, addProblem);
