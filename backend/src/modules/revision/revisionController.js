@@ -1,11 +1,11 @@
-const Problem = require("../models/Problem");
+const Problem = require("../problems/Problem");
 
 exports.getRevision = async (req, res) => {
   try {
     const userId = req.user._id;
 
     const problems = await Problem.find({ userId });
-    
+
     const now = new Date();
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const tomorrowStart = new Date(todayStart);
@@ -15,18 +15,19 @@ exports.getRevision = async (req, res) => {
     const today = [];
     const upcoming = [];
 
-    problems.forEach(p => {
+    problems.forEach((p) => {
       if (!p.solvedDate) return;
-      
+
       // Default revision date: 7 days after solved date if revisionDate is not set
-      const revDate = p.revisionDate || new Date(new Date(p.solvedDate).getTime() + 7 * 24 * 60 * 60 * 1000);
+      const revDate =
+        p.revisionDate ||
+        new Date(new Date(p.solvedDate).getTime() + 7 * 24 * 60 * 60 * 1000);
 
       if (revDate < todayStart) {
         overdue.push(p);
       } else if (revDate >= todayStart && revDate < tomorrowStart) {
         today.push(p);
       } else {
-        // only show upcoming within the next 7 days to avoid huge lists
         const nextWeek = new Date(tomorrowStart);
         nextWeek.setDate(nextWeek.getDate() + 7);
         if (revDate < nextWeek) {
