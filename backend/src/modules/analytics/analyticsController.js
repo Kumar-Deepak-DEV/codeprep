@@ -30,6 +30,14 @@ exports.getAnalytics = async (req, res) => {
       }
     }
 
+    const formatLocalDateKey = (date) => {
+      const d = new Date(date);
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    };
+
     const daysMap = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     const weekly = [];
     const today = new Date();
@@ -41,7 +49,7 @@ exports.getAnalytics = async (req, res) => {
       weekly.push({
         day: daysMap[d.getDay()],
         solved: 0,
-        dateKey: d.toISOString().split("T")[0]
+        dateKey: formatLocalDateKey(d)
       });
     }
 
@@ -54,7 +62,7 @@ exports.getAnalytics = async (req, res) => {
     problems.forEach((p) => {
       // compute weekly progress
       if (p.solvedDate) {
-        const solvedKey = new Date(p.solvedDate).toISOString().split("T")[0];
+        const solvedKey = formatLocalDateKey(p.solvedDate);
         const weekDay = weekly.find((w) => w.dateKey === solvedKey);
         if (weekDay) weekDay.solved++;
       }

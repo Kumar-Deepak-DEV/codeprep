@@ -68,7 +68,7 @@ const fetchLeetCodeSolved = async (username) => {
   try {
     const query = `
       query getRecentSubmissions($username: String!) {
-        recentSubmissionList(username: $username, limit: 100) {
+        recentSubmissionList(username: $username, limit: 15) {
           title
           titleSlug
           timestamp

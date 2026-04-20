@@ -20,6 +20,14 @@ exports.getGoals = async (req, res) => {
 
     const todayGoal = user.dailyGoal || 3;
 
+    const formatLocalDateKey = (date) => {
+      const d = new Date(date);
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    };
+
     const history = [];
     for (let i = 1; i <= 5; i++) {
       const d = new Date();
@@ -36,7 +44,7 @@ exports.getGoals = async (req, res) => {
       });
 
       history.push({
-        date: d.toISOString().split("T")[0],
+        date: formatLocalDateKey(d),
         solved: count,
         goal: todayGoal
       });
