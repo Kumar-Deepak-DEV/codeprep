@@ -1,32 +1,24 @@
+import React from "react";
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
 
 function DashboardLayout({ children, title }) {
-
   return (
-
-    <div className="flex bg-[#020617] min-h-screen">
-
+    <div className="flex bg-[#030604] text-[#e2fced] min-h-screen font-sans selection:bg-[#00FF66]/30 selection:text-[#00FF66] matrix-grid-bg">
       <Sidebar />
 
-      <div className="flex-1 flex flex-col">
-
+      <div className="flex-1 flex flex-col min-w-0">
         <Topbar title={title} />
 
-        <div className="p-6 flex-1">
-
+        <main className="p-6 md:p-8 flex-1 max-w-7xl w-full mx-auto">
           {children}
+        </main>
 
-        </div>
-
-        <footer className="w-full text-center p-4 border-t border-white/10 text-gray-500 text-sm mt-auto bg-[#020617]">
-          &copy; {new Date().getFullYear()} CodePrep. All rights reserved. Let's conquer algorithms together!
+        <footer className="w-full text-center py-5 border-t border-[#00FF66]/15 text-[#6ee7b7]/60 text-xs mt-auto bg-[#020504]/60 font-mono">
+          CodePrep &bull; Matrix DSA Engine &bull; Track &bull; Analyze &bull; Conquer
         </footer>
-
       </div>
-
     </div>
-
   );
 }
 
