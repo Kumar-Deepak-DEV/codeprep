@@ -1,52 +1,73 @@
+import React from "react";
 import {
-  LineChart,
-  Line,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   Tooltip,
   CartesianGrid,
   ResponsiveContainer
 } from "recharts";
+import Card from "../ui/Card";
+import { FiTrendingUp } from "react-icons/fi";
 
-function WeeklyProgressChart({ data }) {
+const CustomTooltip = ({ active, payload, label }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-[#050d08] border border-[#00FF66]/40 p-3 rounded-xl shadow-[0_0_15px_rgba(0,255,102,0.2)] text-xs font-mono">
+        <p className="font-semibold text-white">{label}</p>
+        <p className="text-[#00FF66] mt-1 font-medium">
+          Solved: <strong className="text-white font-bold">{payload[0].value}</strong> problems
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
+
+function WeeklyProgressChart({ data = [] }) {
+  const total = data.reduce((acc, curr) => acc + (curr.solved || 0), 0);
 
   return (
-
-    <div className="bg-[#0f172a] border border-white/10 rounded-xl p-6">
-
-      <h2 className="text-white mb-4">Weekly Progress</h2>
-
-      <div className="h-64">
-
+    <Card
+      title="Weekly Progress Timeline"
+      subtitle={`Total: ${total} problems solved over the past 7 days`}
+      icon={<FiTrendingUp />}
+    >
+      <div className="h-64 w-full">
         <ResponsiveContainer width="100%" height="100%">
-
-          <LineChart data={data}>
-
-            <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-
-            <XAxis dataKey="day" stroke="#94a3b8" />
-
-            <YAxis stroke="#94a3b8" allowDecimals={false} />
-
-            <Tooltip />
-
-            <Line
+          <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+            <defs>
+              <linearGradient id="weeklyMatrixGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#00FF66" stopOpacity={0.4} />
+                <stop offset="95%" stopColor="#00FF66" stopOpacity={0.0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="#0f2419" />
+            <XAxis
+              dataKey="day"
+              stroke="#00FF66"
+              tick={{ fill: "#6ee7b7", fontSize: 12, fontFamily: "JetBrains Mono" }}
+            />
+            <YAxis
+              stroke="#00FF66"
+              tick={{ fill: "#6ee7b7", fontSize: 12, fontFamily: "JetBrains Mono" }}
+              allowDecimals={false}
+            />
+            <Tooltip content={<CustomTooltip />} />
+            <Area
               type="monotone"
               dataKey="solved"
-              stroke="#3b82f6"
+              stroke="#00FF66"
               strokeWidth={3}
+              fillOpacity={1}
+              fill="url(#weeklyMatrixGrad)"
             />
-
-          </LineChart>
-
+          </AreaChart>
         </ResponsiveContainer>
-
       </div>
-
-    </div>
-
+    </Card>
   );
-
 }
 
 export default WeeklyProgressChart;
