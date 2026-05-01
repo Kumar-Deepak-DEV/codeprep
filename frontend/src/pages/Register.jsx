@@ -1,11 +1,16 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import { registerUser } from "../services/authService";
+import Button from "../components/ui/Button";
+import SEO from "../components/ui/SEO";
+import { FiUser, FiMail, FiLock, FiArrowRight, FiArrowLeft, FiCheck } from "react-icons/fi";
+import { SiLeetcode, SiCodeforces } from "react-icons/si";
 
 function Register() {
-
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const [form, setForm] = useState({
     username: "",
@@ -17,249 +22,269 @@ function Register() {
   });
 
   const handleChange = (e) => {
-    setForm({
-      ...form,
+    setForm((prev) => ({
+      ...prev,
       [e.target.name]: e.target.value
-    });
+    }));
   };
 
   const handleNext = (e) => {
-
     e.preventDefault();
-
-    if (!form.username || !form.email || !form.password || !form.confirmPassword) {
-      alert("Please fill all fields");
+    if (!form.username.trim() || !form.email.trim() || !form.password || !form.confirmPassword) {
+      setError("Please fill in all required fields.");
       return;
     }
 
     if (form.password !== form.confirmPassword) {
-      alert("Passwords do not match");
+      setError("Passwords do not match.");
       return;
     }
 
+    if (form.password.length < 6) {
+      setError("Password must be at least 6 characters.");
+      return;
+    }
+
+    setError("");
     setStep(2);
   };
 
   const handleSubmit = async (e) => {
-
     e.preventDefault();
-
-    if (!form.leetcode && !form.codeforces) {
-      alert("Please connect at least one platform");
+    if (!form.leetcode.trim() && !form.codeforces.trim()) {
+      setError("Please provide at least one platform handle (LeetCode or Codeforces).");
       return;
     }
 
     try {
+      setLoading(true);
+      setError("");
 
       await registerUser({
-        username: form.username,
-        email: form.email,
+        username: form.username.trim(),
+        email: form.email.trim(),
         password: form.password,
         platforms: {
-          leetcode: form.leetcode,
-          codeforces: form.codeforces
+          leetcode: form.leetcode.trim(),
+          codeforces: form.codeforces.trim()
         }
       });
 
       navigate("/");
-
-    } catch {
-      alert("Registration failed");
+    } catch (err) {
+      setError(
+        err.response?.data?.message ||
+        err.message ||
+        "Registration failed. Please try again."
+      );
+    } finally {
+      setLoading(false);
     }
-
   };
 
   return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-[#030604] text-white p-4 relative overflow-hidden matrix-grid-bg">
+      <SEO
+        title="Create Account"
+        description="Register for CodePrep to track your LeetCode and Codeforces progress, solve curated problem patterns, and prepare for coding interviews."
+      />
+      {/* Glow Effects */}
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#00FF66]/10 rounded-full blur-3xl pointer-events-none" />
 
-    <div className="min-h-screen flex items-center justify-center bg-linear-to-r from-[#0f172a] via-[#0b1320] to-[#020617] text-white">
-
-      {/* Title */}
-
-      <div className="absolute top-24 text-center">
-
-        <h1 className="text-3xl font-bold tracking-wide">
-          Code <span className="text-blue-400">Prep</span>
+      {/* Header Branding */}
+      <div className="text-center mb-6 relative z-10">
+        <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-black border-2 border-[#00FF66] text-[#00FF66] font-extrabold text-xl mb-3 shadow-[0_0_20px_rgba(0,255,102,0.4)] font-mono">
+          &gt;_
+        </div>
+        <h1 className="text-3xl font-extrabold tracking-tight">
+          Code<span className="text-[#00FF66] drop-shadow-[0_0_10px_rgba(0,255,102,0.5)]">Prep</span>
         </h1>
-
-        <h2 className="text-2xl font-semibold mt-3">
-          Create an account
-        </h2>
-
-        <p className="text-gray-400 text-sm mt-1">
-          Start your journey to coding mastery
+        <p className="text-[#6ee7b7]/80 text-sm mt-1 font-mono">
+          Initialize Account &bull; Step {step} of 2
         </p>
-
-        <p className="text-gray-500 text-xs mt-2">
-          Step {step} of 2
-        </p>
-
       </div>
 
+      {/* Register Card */}
+      <div className="bg-[#060c08]/90 backdrop-blur-xl border-2 border-[#00FF66]/30 rounded-2xl w-full max-w-md p-8 shadow-[0_0_40px_rgba(0,255,102,0.15)] relative z-10">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+            <span className="text-[#00FF66] font-mono text-sm">&gt;</span>
+            <span>{step === 1 ? "Credentials" : "Link Platforms"}</span>
+          </h2>
+          <div className="flex items-center gap-1.5 font-mono text-xs text-[#00FF66]">
+            <span className={`w-2.5 h-2.5 rounded-full ${step === 1 ? "bg-[#00FF66] shadow-[0_0_6px_#00FF66]" : "bg-[#008F39]"}`} />
+            <span className={`w-2.5 h-2.5 rounded-full ${step === 2 ? "bg-[#00FF66] shadow-[0_0_6px_#00FF66]" : "bg-slate-800"}`} />
+          </div>
+        </div>
 
-      {/* Card */}
+        {error && (
+          <div className="mb-5 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-mono leading-relaxed">
+            {error}
+          </div>
+        )}
 
-      <div className="bg-[#1e293b]/60 backdrop-blur-md border border-white/10 rounded-xl w-[420px] shadow-xl p-8">
-
-        {/* VIEWPORT */}
-        <div className="overflow-hidden">
-
-          {/* SLIDER */}
-
-          <div
-            className={`flex w-[200%] transition-transform duration-500 ease-in-out ${
-              step === 1 ? "translate-x-0" : "-translate-x-1/2"
-            }`}
-          >
-
-            {/* STEP 1 */}
-
-            <form
-              onSubmit={handleNext}
-              className="w-1/2 space-y-5 pr-4"
-            >
-
-              <div>
-                <label className="text-sm text-gray-300">Full Name</label>
-
+        {step === 1 ? (
+          <form onSubmit={handleNext} className="space-y-4">
+            <div>
+              <label className="block text-xs font-semibold text-[#a7f3d0] mb-1.5 font-mono">
+                Username / Display Handle *
+              </label>
+              <div className="relative">
+                <FiUser className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#00FF66] text-sm" />
                 <input
+                  type="text"
                   name="username"
-                  placeholder="John Doe"
+                  required
+                  placeholder="e.g. John Doe"
                   value={form.username}
                   onChange={handleChange}
-                  className="w-full mt-2 p-3 rounded-md bg-[#0f172a] border border-gray-600 focus:border-blue-500 outline-none"
+                  className="w-full bg-[#040906] border border-[#00FF66]/25 focus:border-[#00FF66] focus:shadow-[0_0_10px_rgba(0,255,102,0.25)] pl-9 pr-4 py-2.5 rounded-xl text-sm text-white placeholder-[#6ee7b7]/40 outline-none transition font-mono"
                 />
               </div>
+            </div>
 
-
-              <div>
-                <label className="text-sm text-gray-300">Email Address</label>
-
+            <div>
+              <label className="block text-xs font-semibold text-[#a7f3d0] mb-1.5 font-mono">
+                Email Address *
+              </label>
+              <div className="relative">
+                <FiMail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#00FF66] text-sm" />
                 <input
+                  type="email"
                   name="email"
-                  placeholder="name@company.com"
+                  required
+                  placeholder="you@example.com"
                   value={form.email}
                   onChange={handleChange}
-                  className="w-full mt-2 p-3 rounded-md bg-[#0f172a] border border-gray-600 focus:border-blue-500 outline-none"
+                  className="w-full bg-[#040906] border border-[#00FF66]/25 focus:border-[#00FF66] focus:shadow-[0_0_10px_rgba(0,255,102,0.25)] pl-9 pr-4 py-2.5 rounded-xl text-sm text-white placeholder-[#6ee7b7]/40 outline-none transition font-mono"
                 />
               </div>
+            </div>
 
-
-              <div>
-                <label className="text-sm text-gray-300">Password</label>
-
+            <div>
+              <label className="block text-xs font-semibold text-[#a7f3d0] mb-1.5 font-mono">
+                Password *
+              </label>
+              <div className="relative">
+                <FiLock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#00FF66] text-sm" />
                 <input
                   type="password"
                   name="password"
+                  required
                   placeholder="••••••••"
                   value={form.password}
                   onChange={handleChange}
-                  className="w-full mt-2 p-3 rounded-md bg-[#0f172a] border border-gray-600 focus:border-blue-500 outline-none"
+                  className="w-full bg-[#040906] border border-[#00FF66]/25 focus:border-[#00FF66] focus:shadow-[0_0_10px_rgba(0,255,102,0.25)] pl-9 pr-4 py-2.5 rounded-xl text-sm text-white placeholder-[#6ee7b7]/40 outline-none transition font-mono"
                 />
               </div>
+            </div>
 
-
-              <div>
-                <label className="text-sm text-gray-300">Confirm Password</label>
-
+            <div>
+              <label className="block text-xs font-semibold text-[#a7f3d0] mb-1.5 font-mono">
+                Confirm Password *
+              </label>
+              <div className="relative">
+                <FiLock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#00FF66] text-sm" />
                 <input
                   type="password"
                   name="confirmPassword"
+                  required
                   placeholder="••••••••"
                   value={form.confirmPassword}
                   onChange={handleChange}
-                  className="w-full mt-2 p-3 rounded-md bg-[#0f172a] border border-gray-600 focus:border-blue-500 outline-none"
+                  className="w-full bg-[#040906] border border-[#00FF66]/25 focus:border-[#00FF66] focus:shadow-[0_0_10px_rgba(0,255,102,0.25)] pl-9 pr-4 py-2.5 rounded-xl text-sm text-white placeholder-[#6ee7b7]/40 outline-none transition font-mono"
                 />
               </div>
+            </div>
 
-
-              <button
-                type="submit"
-                className="w-full bg-blue-500 hover:bg-blue-600 transition p-3 rounded-md font-semibold"
-              >
-                Next
-              </button>
-
-            </form>
-
-
-            {/* STEP 2 */}
-
-            <form
-              onSubmit={handleSubmit}
-              className="w-1/2 space-y-5 pl-4"
+            <Button
+              type="submit"
+              variant="primary"
+              size="lg"
+              icon={<FiArrowRight />}
+              className="w-full mt-2"
             >
+              Continue &rarr; Platform Setup
+            </Button>
+          </form>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="p-3 rounded-xl bg-[#040906] border border-[#00FF66]/20 text-xs text-[#a7f3d0] leading-relaxed font-mono">
+              Connect at least one platform to automatically stream and analyze your problem solving.
+            </div>
 
-              <div>
-                <label className="text-sm text-gray-300">LeetCode Username</label>
+            <div>
+              <label className="block text-xs font-semibold text-[#a7f3d0] mb-1.5 flex items-center gap-1.5 font-mono">
+                <SiLeetcode className="text-[#FFA116]" />
+                <span>LeetCode Username</span>
+              </label>
+              <input
+                type="text"
+                name="leetcode"
+                placeholder="e.g. tour_de_code"
+                value={form.leetcode}
+                onChange={handleChange}
+                className="w-full bg-[#040906] border border-[#00FF66]/25 focus:border-[#00FF66] px-3.5 py-2.5 rounded-xl text-sm text-white placeholder-[#6ee7b7]/40 outline-none transition font-mono"
+              />
+            </div>
 
-                <input
-                  name="leetcode"
-                  placeholder="leetcode_handle"
-                  value={form.leetcode}
-                  onChange={handleChange}
-                  className="w-full mt-2 p-3 rounded-md bg-[#0f172a] border border-gray-600 focus:border-blue-500 outline-none"
-                />
-              </div>
+            <div>
+              <label className="block text-xs font-semibold text-[#a7f3d0] mb-1.5 flex items-center gap-1.5 font-mono">
+                <SiCodeforces className="text-[#1890ff]" />
+                <span>Codeforces Handle</span>
+              </label>
+              <input
+                type="text"
+                name="codeforces"
+                placeholder="e.g. tourist"
+                value={form.codeforces}
+                onChange={handleChange}
+                className="w-full bg-[#040906] border border-[#00FF66]/25 focus:border-[#00FF66] px-3.5 py-2.5 rounded-xl text-sm text-white placeholder-[#6ee7b7]/40 outline-none transition font-mono"
+              />
+            </div>
 
+            <div className="flex gap-3 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                icon={<FiArrowLeft />}
+                onClick={() => setStep(1)}
+                className="w-1/3"
+              >
+                Back
+              </Button>
+              <Button
+                type="submit"
+                variant="primary"
+                size="lg"
+                loading={loading}
+                icon={<FiCheck />}
+                className="w-2/3"
+              >
+                Initialize
+              </Button>
+            </div>
+          </form>
+        )}
 
-              <div>
-                <label className="text-sm text-gray-300">Codeforces Handle</label>
-
-                <input
-                  name="codeforces"
-                  placeholder="codeforces_handle"
-                  value={form.codeforces}
-                  onChange={handleChange}
-                  className="w-full mt-2 p-3 rounded-md bg-[#0f172a] border border-gray-600 focus:border-blue-500 outline-none"
-                />
-              </div>
-
-
-              <div className="flex gap-3">
-
-                <button
-                  type="button"
-                  onClick={() => setStep(1)}
-                  className="w-1/2 bg-gray-600 hover:bg-gray-700 transition p-3 rounded-md font-semibold"
-                >
-                  Back
-                </button>
-
-                <button
-                  type="submit"
-                  className="w-1/2 bg-blue-500 hover:bg-blue-600 transition p-3 rounded-md font-semibold"
-                >
-                  Register
-                </button>
-
-              </div>
-
-            </form>
-
-          </div>
-
+        <div className="flex items-center gap-3 my-6 text-[#6ee7b7]/40 text-xs font-mono">
+          <div className="flex-1 h-px bg-[#00FF66]/20"></div>
+          <span>ALREADY REGISTERED?</span>
+          <div className="flex-1 h-px bg-[#00FF66]/20"></div>
         </div>
 
+        <p className="text-center text-slate-400 text-xs leading-relaxed font-mono">
+          Already have an account?{" "}
+          <Link
+            to="/"
+            className="text-[#00FF66] font-bold hover:text-[#6ee7b7] transition underline underline-offset-2"
+          >
+            Sign in
+          </Link>
+        </p>
       </div>
-
-
-      {/* Login Link */}
-
-      <div className="absolute bottom-16 text-gray-400 text-sm">
-
-        Already have an account?{" "}
-
-        <span
-          className="text-blue-400 font-medium cursor-pointer hover:underline"
-          onClick={() => navigate("/")}
-        >
-          Log in
-        </span>
-
-      </div>
-
     </div>
-
   );
 }
 
